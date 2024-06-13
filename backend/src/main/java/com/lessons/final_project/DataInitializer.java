@@ -25,6 +25,14 @@ public class DataInitializer {
     @Bean
     public CommandLineRunner initData() {
         return args -> {
+            // Проверяем, пуста ли база данных
+            long catCount = catRepository.count();
+
+            // Если в базе данных уже есть записи, выходим из метода
+            if (catCount > 0) {
+                return;
+            }
+            
             // Создаем породы
             Breed breed1 = new Breed("Cиамская");
             Breed breed2 = new Breed("Мейн-кун");
