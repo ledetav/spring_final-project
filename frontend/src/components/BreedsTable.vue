@@ -17,8 +17,9 @@
           <div class="table-data">{{ breed.name }}</div>
           <div class="table-data">{{ breed.catCount }}</div>
           <div class="table-data">
-            <button @click="deleteBreed(breed.id)" class="delete-button"><i
-                class="fa-sharp fa-solid fa-trash fa-xs"></i></button>
+            <button @click="deleteBreed(breed.id)" class="delete-button">
+              <i class="fa-sharp fa-solid fa-trash fa-xs"></i>
+            </button>
           </div>
         </div>
       </div>
@@ -39,31 +40,38 @@ export default {
     this.fetchBreeds();
   },
   methods: {
-    fetchBreeds() {
-      axios.get('/api/breeds').then(response => {
+    async fetchBreeds() {
+      try {
+        const response = await axios.get('/api/breeds');
         this.breeds = response.data;
-        // Для каждой породы запрашиваем количество кошек
-        this.breeds.forEach(breed => {
+
+        // Запрашиваем количество кошек для каждой породы
+        for (const breed of this.breeds) {
           this.fetchCatsByBreed(breed.id);
-        });
-      });
+        }
+      } catch (error) {
+        console.error("Ошибка при получении пород:", error);
+      }
     },
-    fetchCatsByBreed(breedId) {
-      axios.get(`/api/breeds/${breedId}/cats`).then(response => {
-        // Обновите свойство породы, добавив количество кошек
+    async fetchCatsByBreed(breedId) {
+      try {
+        const response = await axios.get(`/api/breeds/${breedId}/cats`);
         const breedIndex = this.breeds.findIndex(breed => breed.id === breedId);
         if (breedIndex !== -1) {
-          this.breeds[breedIndex].catCount = response.data.length;
+          this.$set(this.breeds[breedIndex], 'catCount', response.data.length);
         }
-      });
+      } catch (error) {
+        console.error("Ошибка при получении кошек породы:", error);
+      }
     },
-    deleteBreed(id) {
-      axios.delete(`/api/breeds/${id}`).then(() => {
-        // Обновление списка пород и кошек после удаления
-        this.fetchBreeds();
-      }).catch(error => {
-        console.error("Ошибка при удалении кошек породы:", error);
-      });
+    async deleteBreed(id) {
+      try {
+        await axios.delete(`/api/breeds/${id}`);
+        // Удаляем породу из локального состояния
+        this.breeds = this.breeds.filter(breed => breed.id !== id);
+      } catch (error) {
+        console.error("Ошибка при удалении породы:", error);
+      }
     },
   }
 }
